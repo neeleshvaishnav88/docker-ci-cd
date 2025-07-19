@@ -6,6 +6,8 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger.json');
 
 const cors = require('cors');
+const csrf = require('csurf');
+const cookieParser = require('cookie-parser');
 
 const itemsRouter = require('./routes/items');
 
@@ -14,6 +16,13 @@ const app = express();
 app.use(cors());
 
 app.use(express.json());
+app.use(cookieParser());
+app.use(csrf({ cookie: true }));
+
+// Add a test route for CSRF token
+app.get('/form', (req, res) => {
+    res.send(`CSRF token: ${req.csrfToken()}`);
+});
 
 app.use('/items', itemsRouter);
 

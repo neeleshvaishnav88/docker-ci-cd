@@ -10,6 +10,11 @@ services:
       - MONGO_URL=mongodb://mongo:27018/tododb
     depends_on:
       - mongo
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
   mongo:
     image: mongo:6
     restart: unless-stopped
@@ -17,6 +22,11 @@ services:
       - "27018:27017"
     volumes:
       - mongo-data:/data/db
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /data/db:rw
 
 volumes:
   mongo-data:
