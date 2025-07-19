@@ -22,7 +22,7 @@ app.use('/', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 const port = process.env.PORT || 5000;
 const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017/tododb';
 
-mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongoUrl)
     .then(() => {
         console.log('Connected to MongoDB');
         app.listen(port, () => {
