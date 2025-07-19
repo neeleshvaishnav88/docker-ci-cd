@@ -1,0 +1,57 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+
+  ci:
+    name: Node.js CI with Docker Build, Semgrep, Trivy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run Tests
+      run: npm test
+
+    - name: Build Docker Image
+      run: |
+        docker build -t my-node-app:latest .
+
+    - name: Static Code Analysis with Semgrep
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: auto
+
+    - name: Scan Docker image with Trivy
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'my-node-app:latest'
+        format: 'table'
+        exit-code: '0' # set to '1' to fail on high/critical
+        severity: 'HIGH,CRITICAL'
+
+    # OPTIONAL: Push image to DockerHub (uncomment if needed)
+    # - name: Login to DockerHub
+    #   run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    # - name: Tag and Push Docker image
+    #   run: |
+    #     docker tag my-node-app:latest yourusername/my-node-app:latest
+    #     docker push yourusername/my-node-app:latest
