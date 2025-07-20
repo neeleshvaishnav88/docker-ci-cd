@@ -33,7 +33,7 @@ jobs:
       with:
         image-ref: 'my-node-app:latest'
         format: 'table'
-        exit-code: '0' # set to '1' to fail on high/critical
+        exit-code: '1' # set to '1' to fail on high/critical
         severity: 'HIGH,CRITICAL'
 
     # OPTIONAL: Push image to DockerHub (uncomment if needed)
