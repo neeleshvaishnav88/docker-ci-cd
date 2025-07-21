@@ -1,0 +1,20 @@
+# tfsec configuration file
+# Customize security scanning rules for this project
+
+# Exclude specific checks if needed (uncomment and modify as required)
+# exclude:
+#   - AWS017  # Ensure all data stored in the S3 bucket is securely encrypted at rest
+#   - AWS018  # Ensure the S3 bucket has access logging enabled
+
+# Minimum version of tfsec to use
+minimum_version: 1.0.0
+
+# Custom checks (if needed)
+# custom_checks:
+#   - code: CUSTOM001
+#     description: "Custom check example"
+#     severity: WARNING
+#     resource_types:
+#       - aws_instance
+#     required_labels:
+#       - Environment 

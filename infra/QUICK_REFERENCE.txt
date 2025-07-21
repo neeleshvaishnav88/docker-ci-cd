@@ -1,0 +1,36 @@
+===============================================================================
+                    QUICK REFERENCE - SAMPLE EC2 INFRASTRUCTURE
+===============================================================================
+
+COMMON COMMANDS
+===============
+
+Setup:
+  ssh-keygen -t rsa -b 4096 -f ./id_rsa -N ""
+  cp terraform.tfvars.example terraform.tfvars
+  # Edit terraform.tfvars with your values
+
+Deploy:
+  terraform init
+  terraform validate
+  terraform plan -out=tfplan
+  terraform apply tfplan
+
+Security Scan:
+  ./tfsec . --format json --out tfsec-results.json
+  checkov -d . --output json --output-file-path checkov-results.json
+
+Access:
+  terraform output instance_public_ip
+  ssh -i id_rsa ec2-user@<ip>
+  curl http://<ip>:8080/health
+
+Monitor:
+  sudo journalctl -u sample-app -f
+  sudo systemctl status sample-app
+
+Cleanup:
+  terraform destroy
+  rm -f tfplan tfsec-results.json checkov-results.json
+
+=============================================================================== 

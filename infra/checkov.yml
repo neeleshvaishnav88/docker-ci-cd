@@ -1,0 +1,24 @@
+# Checkov configuration file
+# Additional security scanning for Terraform files
+
+# Framework to scan
+framework:
+  - terraform
+
+# Skip specific checks if needed (uncomment and modify as required)
+# skip:
+#   - CKV_AWS_126  # Ensure that detailed monitoring is enabled for VPC Flow Logs
+#   - CKV_AWS_130  # Ensure VPC Flow Logs is enabled in all VPCs
+
+# Output format
+output:
+  - cli
+  - json
+  - junitxml
+
+# Minimum version
+min_version: 2.0.0
+
+# Custom policies (if needed)
+# custom_policies:
+#   - path: ./custom-policies 

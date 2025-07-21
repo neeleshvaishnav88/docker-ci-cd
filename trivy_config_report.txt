@@ -1,0 +1,162 @@
+
+Report Summary
+
+┌───────────────┬────────────┬───────────────────┐
+│    Target     │    Type    │ Misconfigurations │
+├───────────────┼────────────┼───────────────────┤
+│ Dockerfile    │ dockerfile │         1         │
+├───────────────┼────────────┼───────────────────┤
+│ infra         │ terraform  │         0         │
+├───────────────┼────────────┼───────────────────┤
+│ infra/main.tf │ terraform  │         6         │
+└───────────────┴────────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+Dockerfile (dockerfile)
+=======================
+Tests: 27 (SUCCESSES: 26, FAILURES: 1)
+Failures: 1 (UNKNOWN: 0, LOW: 1, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
+
+AVD-DS-0026 (LOW): Add HEALTHCHECK instruction in your Dockerfile
+═══════════════════════════════════════════════════════════════════════════════════════════════════════
+You should add HEALTHCHECK instruction in your docker container images to perform the health check on running containers.
+
+See https://avd.aquasec.com/misconfig/ds026
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+infra/main.tf (terraform)
+=========================
+Tests: 6 (SUCCESSES: 0, FAILURES: 6)
+Failures: 6 (UNKNOWN: 0, LOW: 2, MEDIUM: 1, HIGH: 2, CRITICAL: 1)
+
+AVD-AWS-0017 (LOW): Log group is not encrypted.
+═══════════════════════════════════════════════════════════════════════════════════════════════════════
+CloudWatch log groups are encrypted by default, however, to get the full benefit of controlling key rotation and other KMS aspects a KMS CMK should be used.
+
+
+See https://avd.aquasec.com/misconfig/avd-aws-0017
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+ infra/main.tf:271-280
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+ 271 ┌ resource "aws_cloudwatch_log_group" "ec2_logs" {
+ 272 │   name              = "/aws/ec2/${var.project_name}"
+ 273 │   retention_in_days = 7
+ 274 │ 
+ 275 │   tags = {
+ 276 │     Name        = "${var.project_name}-logs"
+ 277 │     Environment = var.environment
+ 278 │     ManagedBy   = "terraform"
+ 279 │   }
+ 280 └ }
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AVD-AWS-0099 (LOW): Security group explicitly uses the default description.
+═══════════════════════════════════════════════════════════════════════════════════════════════════════
+Security groups should include a description for auditing purposes.
+
+Simplifies auditing, debugging, and managing security groups.
+
+
+See https://avd.aquasec.com/misconfig/aws-vpc-add-description-to-security-group
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+ infra/main.tf:72-121
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  72 ┌ resource "aws_security_group" "ec2" {
+  73 │   name_prefix = "${var.project_name}-ec2-sg-"
+  74 │   vpc_id      = aws_vpc.main.id
+  75 │ 
+  76 │   # SSH access from specific IP ranges only
+  77 │   ingress {
+  78 │     description = "SSH from allowed IPs"
+  79 │     from_port   = 22
+  80 └     to_port     = 22
+  ..   
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AVD-AWS-0104 (CRITICAL): Security group rule allows unrestricted egress to any IP address.
+═══════════════════════════════════════════════════════════════════════════════════════════════════════
+Opening up ports to connect out to the public internet is generally to be avoided. You should restrict access to IP addresses or ranges that are explicitly required where possible.
+
+
+See https://avd.aquasec.com/misconfig/aws-vpc-no-public-egress-sgr
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+ infra/main.tf:109
+   via infra/main.tf:104-110 (egress)
+    via infra/main.tf:72-121 (aws_security_group.ec2)
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  72   resource "aws_security_group" "ec2" {
+  ..   
+ 109 [     cidr_blocks = ["0.0.0.0/0"]
+ ...   
+ 121   }
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AVD-AWS-0107 (HIGH): Security group rule allows unrestricted ingress from any IP address.
+═══════════════════════════════════════════════════════════════════════════════════════════════════════
+Security groups provide stateful filtering of ingress and egress network traffic to AWS
+resources. It is recommended that no security group allows unrestricted ingress access to
+remote server administration ports, such as SSH to port 22 and RDP to port 3389.
+
+
+See https://avd.aquasec.com/misconfig/avd-aws-0107
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+ infra/main.tf:82
+   via infra/main.tf:77-83 (ingress)
+    via infra/main.tf:72-121 (aws_security_group.ec2)
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  72   resource "aws_security_group" "ec2" {
+  ..   
+  82 [     cidr_blocks = var.allowed_ssh_ips
+ ...   
+ 121   }
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AVD-AWS-0164 (HIGH): Subnet associates public IP address.
+═══════════════════════════════════════════════════════════════════════════════════════════════════════
+You should limit the provision of public IP addresses for resources. Resources should not be exposed on the public internet, but should have access limited to consumers required for the function of your application.
+
+
+See https://avd.aquasec.com/misconfig/aws-vpc-no-public-ingress-sgr
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+ infra/main.tf:32
+   via infra/main.tf:28-39 (aws_subnet.public)
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  28   resource "aws_subnet" "public" {
+  ..   
+  32 [   map_public_ip_on_launch = true
+  ..   
+  39   }
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+AVD-AWS-0178 (MEDIUM): VPC does not have VPC Flow Logs enabled.
+═══════════════════════════════════════════════════════════════════════════════════════════════════════
+VPC Flow Logs provide visibility into network traffic that traverses the VPC and can be used to detect anomalous traffic or insight during security workflows.
+
+
+See https://avd.aquasec.com/misconfig/aws-autoscaling-enable-at-rest-encryption
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+ infra/main.tf:16-26
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+  16 ┌ resource "aws_vpc" "main" {
+  17 │   cidr_block           = var.vpc_cidr
+  18 │   enable_dns_hostnames = true
+  19 │   enable_dns_support   = true
+  20 │ 
+  21 │   tags = {
+  22 │     Name        = "${var.project_name}-vpc"
+  23 │     Environment = var.environment
+  24 └     ManagedBy   = "terraform"
+  ..   
+───────────────────────────────────────────────────────────────────────────────────────────────────────
+
+

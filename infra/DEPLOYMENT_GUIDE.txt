@@ -1,0 +1,360 @@
+===============================================================================
+                    SAMPLE EC2 INFRASTRUCTURE DEPLOYMENT GUIDE
+===============================================================================
+
+This guide provides step-by-step instructions for deploying and managing the 
+sample EC2 infrastructure using Terraform with security best practices.
+
+===============================================================================
+                                PREREQUISITES
+===============================================================================
+
+1. Terraform >= 1.0 installed
+2. AWS CLI configured with appropriate credentials
+3. SSH key pair for EC2 access
+4. tfsec and Checkov (optional, installation instructions below)
+
+===============================================================================
+                              INITIAL SETUP
+===============================================================================
+
+STEP 1: Generate SSH Key Pair (if you don't have one)
+-----------------------------------------------------
+ssh-keygen -t rsa -b 4096 -f ./id_rsa -N ""
+echo "SSH key pair generated:"
+echo "Private key: ./id_rsa"
+echo "Public key: ./id_rsa.pub"
+echo "Add the public key content to terraform.tfvars"
+
+STEP 2: Configure Variables
+---------------------------
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your specific values:
+# - Update allowed_ssh_ips to your specific IP ranges
+# - Replace ssh_public_key with your actual public key
+# - Consider changing the default region and instance type
+
+STEP 3: Install Security Scanning Tools (Optional)
+--------------------------------------------------
+# Install tfsec
+curl -L https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64 -o tfsec
+chmod +x tfsec
+
+# Install Checkov (using pipx)
+sudo apt install pipx -y
+pipx install checkov
+
+===============================================================================
+                              DEPLOYMENT COMMANDS
+===============================================================================
+
+INITIALIZE TERRAFORM
+-------------------
+terraform init
+# This downloads required providers and initializes the working directory
+
+VALIDATE CONFIGURATION
+---------------------
+terraform validate
+# Validates the Terraform configuration files
+
+FORMAT TERRAFORM FILES
+---------------------
+terraform fmt -recursive
+# Formats all Terraform files for consistency
+
+RUN SECURITY SCANS
+-----------------
+# Run tfsec security scan
+./tfsec . --format json --out tfsec-results.json
+echo "tfsec scan completed. Results saved to tfsec-results.json"
+
+# Run Checkov security scan
+checkov -d . --output json --output-file-path checkov-results.json
+echo "Checkov scan completed. Results saved to checkov-results.json"
+
+# Review security scan results
+cat tfsec-results.json
+cat checkov-results.json
+
+PLAN CHANGES
+-----------
+terraform plan -out=tfplan
+# Creates an execution plan and saves it to tfplan file
+
+APPLY CHANGES
+------------
+terraform apply tfplan
+# Applies the planned changes to create/update infrastructure
+
+SHOW OUTPUTS
+-----------
+terraform output
+# Displays the output values (instance IPs, IDs, etc.)
+
+LIST RESOURCES
+-------------
+terraform state list
+# Shows all resources managed by Terraform
+
+===============================================================================
+                              SECURITY SCANNING
+===============================================================================
+
+COMPREHENSIVE SECURITY AUDIT
+---------------------------
+echo "Running comprehensive security audit..."
+
+echo "1. Checking for hardcoded secrets..."
+grep -r "AKIA\|sk_live\|pk_live" . --exclude-dir=.terraform --exclude=*.tfstate* || echo "No obvious hardcoded secrets found"
+
+echo "2. Checking for open security groups..."
+grep -r "0.0.0.0/0" . --exclude-dir=.terraform --exclude=*.tfstate* || echo "No open security groups found"
+
+echo "3. Running tfsec scan..."
+./tfsec . --format json --out tfsec-results.json
+
+echo "4. Running Checkov scan..."
+checkov -d . --output json --output-file-path checkov-results.json
+
+echo "5. Security audit completed"
+
+PRE-COMMIT CHECKS
+----------------
+# Run all checks before committing changes
+terraform validate
+terraform fmt -recursive -check
+./tfsec . --format json --out tfsec-results.json
+checkov -d . --output json --output-file-path checkov-results.json
+echo "All pre-commit checks completed!"
+
+===============================================================================
+                              ACCESSING THE INSTANCE
+===============================================================================
+
+GET INSTANCE DETAILS
+-------------------
+terraform output instance_public_ip
+terraform output instance_private_ip
+terraform output instance_id
+
+SSH ACCESS
+---------
+# SSH to the instance (replace with your private key path)
+ssh -i id_rsa ec2-user@<instance-public-ip>
+
+WEB APPLICATION ACCESS
+--------------------
+# Check the web application
+curl http://<instance-public-ip>:8080
+curl http://<instance-public-ip>:8080/health
+
+# Health check returns JSON with system status
+curl -s http://<instance-public-ip>:8080/health | jq .
+
+===============================================================================
+                              MONITORING AND LOGS
+===============================================================================
+
+CLOUDWATCH LOGS
+--------------
+# View CloudWatch logs in AWS Console:
+# - System logs: /aws/ec2/sample-ec2/system
+# - Security logs: /aws/ec2/sample-ec2/security
+
+APPLICATION LOGS (on instance)
+-----------------------------
+# View application logs
+sudo journalctl -u sample-app -f
+
+# Check application status
+sudo systemctl status sample-app
+
+# View welcome message
+cat /home/appuser/welcome.txt
+
+SYSTEM MONITORING
+----------------
+# Check system resources
+htop
+free -h
+df -h
+
+# Check running services
+sudo systemctl list-units --type=service --state=running
+
+===============================================================================
+                              MAINTENANCE AND UPDATES
+===============================================================================
+
+UPDATE INFRASTRUCTURE
+-------------------
+# Make changes to Terraform files
+# Then run:
+terraform plan -out=tfplan
+terraform apply tfplan
+
+SECURITY UPDATES
+---------------
+# Run security scans
+./tfsec . --format json --out tfsec-results.json
+checkov -d . --output json --output-file-path checkov-results.json
+
+# Review and fix any issues
+# Re-apply if needed
+terraform plan -out=tfplan
+terraform apply tfplan
+
+UPDATE TERRAFORM AND PROVIDERS
+-----------------------------
+# Update Terraform version
+# Update provider versions in versions.tf
+terraform init -upgrade
+
+===============================================================================
+                              TROUBLESHOOTING
+===============================================================================
+
+COMMON ISSUES AND SOLUTIONS
+--------------------------
+
+1. SSH Connection Failed
+   - Verify security group allows your IP
+   - Check SSH key configuration
+   - Ensure instance is running
+   - Check route table associations
+
+2. Security Scan Failures
+   - Review scan results in JSON files
+   - Fix issues or add exclusions in config files
+   - Update Terraform configuration
+
+3. Terraform Errors
+   - Run: terraform validate
+   - Check AWS credentials
+   - Verify region and resource limits
+   - Check for syntax errors
+
+4. Instance Not Accessible
+   - Check security group rules
+   - Verify VPC and subnet configuration
+   - Check internet gateway and route tables
+   - Review CloudWatch logs
+
+GETTING HELP
+-----------
+- Check CloudWatch logs for application issues
+- Review Terraform state: terraform state list
+- Check instance status in AWS Console
+- Review security scan results
+
+===============================================================================
+                              CLEANUP
+===============================================================================
+
+DESTROY INFRASTRUCTURE
+---------------------
+terraform destroy
+# This will remove all created resources
+# WARNING: This action cannot be undone!
+
+CLEAN UP FILES
+-------------
+rm -f tfplan
+rm -f tfsec-results.json
+rm -f checkov-results.json
+rm -f tfsec
+rm -f id_rsa id_rsa.pub
+
+===============================================================================
+                              SECURITY BEST PRACTICES
+===============================================================================
+
+1. Never commit secrets to version control
+   - Use environment variables or AWS Secrets Manager
+   - Keep terraform.tfvars in .gitignore
+
+2. Restrict SSH access
+   - Update allowed_ssh_ips to your specific ranges
+   - Use SSH key-only authentication
+
+3. Regular updates
+   - Keep Terraform and providers updated
+   - Apply security patches regularly
+
+4. Monitor logs
+   - Check CloudWatch logs regularly
+   - Set up alerts for security events
+
+5. Security scans
+   - Run scans before every deployment
+   - Review and fix issues promptly
+
+6. Backup state
+   - Store Terraform state securely
+   - Use remote state storage
+
+7. Use tags
+   - All resources are properly tagged
+   - Helps with cost tracking and management
+
+===============================================================================
+                              CI/CD INTEGRATION
+===============================================================================
+
+GITHUB ACTIONS EXAMPLE
+---------------------
+# Add to your CI/CD pipeline:
+
+- name: Security Scan
+  run: |
+    ./tfsec . --format json --out tfsec-results.json
+    checkov -d . --output json --output-file-path checkov-results.json
+    # Fail if high/critical issues found
+    if [ -s tfsec-results.json ] || [ -s checkov-results.json ]; then
+      echo "Security issues found!"
+      exit 1
+    fi
+
+- name: Terraform Plan
+  run: |
+    terraform init
+    terraform validate
+    terraform plan -out=tfplan
+
+- name: Terraform Apply
+  run: terraform apply tfplan
+
+===============================================================================
+                              RESOURCE COSTS
+===============================================================================
+
+ESTIMATED MONTHLY COSTS (us-west-2)
+----------------------------------
+- t3.micro EC2 instance: ~$8-10/month
+- EBS volume (20GB gp3): ~$2/month
+- CloudWatch logs: ~$0.50/month
+- Data transfer: Varies based on usage
+
+TOTAL: Approximately $10-15/month
+
+===============================================================================
+                              SUPPORT
+===============================================================================
+
+For issues and questions:
+1. Check the troubleshooting section above
+2. Review AWS documentation
+3. Check Terraform documentation
+4. Review security scan results
+
+===============================================================================
+                              DISCLAIMER
+===============================================================================
+
+This is a sample configuration for educational purposes. Always review and 
+customize security settings for your specific requirements before using in 
+production. The authors are not responsible for any security incidents or 
+costs incurred from using this configuration.
+
+=============================================================================== 

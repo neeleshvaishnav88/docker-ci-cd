@@ -1,0 +1,28 @@
+# Example terraform.tfvars file
+# Copy this file to terraform.tfvars and update the values
+
+# AWS Configuration
+aws_region = "us-west-2"
+
+# Project Configuration
+project_name = "sample-ec2"
+environment  = "dev"
+
+# Network Configuration
+vpc_cidr            = "10.0.0.0/16"
+public_subnet_cidr  = "10.0.1.0/24"
+
+# EC2 Configuration
+instance_type     = "t3.micro"
+root_volume_size  = 20
+
+# Security Configuration
+# IMPORTANT: Replace with your actual SSH public key
+ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC..."
+
+# IMPORTANT: Replace with your specific IP ranges for SSH access
+# Example: ["192.168.1.0/24", "10.0.0.0/8"]
+allowed_ssh_ips = ["0.0.0.0/0"]  # WARNING: Change this to your specific IP ranges
+
+# S3 Configuration
+config_bucket = "sample-ec2-config" 

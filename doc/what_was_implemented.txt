@@ -1,0 +1,5 @@
+What Did We Do (And Why)?
+
+In this project, we made sure that all the important secrets—like passwords and API keys—are never written directly into the code or shared in places where they could be seen by accident. Instead, we set things up so that these secrets are stored safely in a tool called Vault. When the app or the CI/CD pipeline needs a secret, it asks Vault for it, just for that moment, and then moves on. This way, secrets aren’t left lying around where someone could find them.
+
+Why did we do it this way? Because it’s way safer! If secrets are hidden away in Vault, there’s much less chance of them leaking out or being stolen. It also means we can change them easily if we ever need to, without having to dig through code or configuration files. Basically, it keeps our project secure and makes life a lot easier for everyone working on it. 

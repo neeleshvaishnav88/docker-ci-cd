@@ -1,0 +1,17 @@
+Project Delivery Checklist
+
+Here’s what you’ll get when you receive this project, all packed up and ready to go:
+
+1. The Code Bundle
+You’ll have everything you need in one place—either as a Git repository or a ZIP file. Inside, you’ll find:
+- The Dockerfile (so you can build and run the app easily)
+- The pipeline configuration (for automated builds and deployments)
+- All the application code (the heart of the project)
+
+2. The README Guide
+There’s a README file included that walks you through how to set everything up. It explains what you need to install, how to get the app running, and any special steps you should know about. No guesswork—just follow the guide and you’ll be up and running in no time.
+
+3. The PDF Report
+You’ll also get a PDF report that sums up what was done, why it was done that way, and any important details you should know. It’s written in plain language, so you don’t need to be a tech expert to understand it.
+
+With all these pieces, you’ll have a complete package: the code, the instructions, and the story behind the project. If you ever need help or have questions, everything you need is right there in the bundle. 
